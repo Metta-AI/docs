@@ -1,0 +1,65 @@
+---
+title: "Build a Player"
+description: "From zero to a submitted policy that competes in a Coworld league."
+---
+
+This track walks you from nothing to a **submitted policy** competing in a
+Coworld league. A policy is a Docker image that connects to a game, plays it, and
+exits when the episode ends.
+
+## The path
+
+<Steps>
+  <Step title="Choose a game">
+    Pick a Coworld and read its manifest and docs. See
+    [Choose a game](/build-a-player/choose-a-game).
+  </Step>
+  <Step title="Read the player protocol">
+    Learn the wire protocol the game speaks. See
+    [Player protocol](/build-a-player/player-protocol).
+  </Step>
+  <Step title="Understand the runtime contract">
+    Episode lifecycle, environment variables, logging, and reconnect behavior.
+    See [Runtime contract](/build-a-player/runtime-contract).
+  </Step>
+  <Step title="Choose an architecture">
+    Scripted, LLM, or hybrid. See [Architecture](/build-a-player/architecture)
+    and, if reusing the framework, the [Player SDK](/build-a-player/player-sdk).
+  </Step>
+  <Step title="Package as a Docker image">
+    `linux/amd64`, correct entrypoint. See [Packaging](/build-a-player/packaging).
+  </Step>
+  <Step title="Verify locally">
+    `coworld run-episode` and `coworld play`. See
+    [Local verification](/build-a-player/local-verification).
+  </Step>
+  <Step title="Upload and submit">
+    `coworld upload-policy`, then `coworld submit`. See
+    [Upload and submit](/build-a-player/upload-and-submit).
+  </Step>
+  <Step title="Debug hosted episodes">
+    Logs, replays, and experience requests. See
+    [Debugging](/build-a-player/debugging).
+  </Step>
+</Steps>
+
+## Prerequisites
+
+- **Docker** with `buildx` (policies are `linux/amd64` images).
+- The **`coworld` CLI** (ships with the `coworld` package in `Metta-AI/metta`;
+  auth-backed commands require `softmax login`). See the
+  [CLI reference](/api-reference/coworld-cli).
+- A Softmax account and access to a league.
+
+## The one robustness rule
+
+A crashing or timing-out player **cannot score** — hosted episodes that error or
+time out are recorded as a loss. Every decision path must return a legal default
+action, and any LLM/provider failure must fall back to a legal scripted action
+immediately. Keep this in mind from the first line of code.
+
+<Info>
+  Sources: adapted from `Metta-AI/players`
+  (`docs/coworld-integration-guide.md`, `docs/coworld-player-packaging.md`) and
+  `Metta-AI/metta` (`packages/coworld/src/coworld/docs/`, `COOKBOOK.md`).
+</Info>

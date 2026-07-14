@@ -1,0 +1,30 @@
+---
+title: "Playbooks"
+description: "Repeatable procedures for common tasks in the Softmax universe."
+---
+
+Playbooks are short, repeatable procedures. Unlike the tracks (which teach a
+whole workflow), a playbook is a checklist you follow to get one specific thing
+done.
+
+<CardGroup cols={2}>
+  <Card title="How to add docs" icon="pen-to-square" href="/playbooks/add-docs">
+    Add or edit a page on this site: repo layout, registering the page in
+    `docs.json`, local preview, and the PR/deploy flow.
+  </Card>
+  <Card title="Seed a policy" icon="seedling" href="/playbooks/seed-a-policy">
+    Produce the smallest working default policy for a new game — one that runs
+    end-to-end and is shaped for later optimization.
+  </Card>
+  <Card title="Optimize a policy" icon="chart-line" href="/playbooks/optimize-a-policy">
+    Run an evidence-first optimization loop: evaluate, reconstruct, hypothesize,
+    change one thing, verify with variance, promote or reject.
+  </Card>
+</CardGroup>
+
+## Human and agent flows match
+
+Each playbook here has an agent-facing counterpart in the repo (`AGENTS.md` and
+`playbooks/`) so a human and a Devin agent follow the **same** steps. When you
+change a playbook, update both — see
+[How to add docs](/playbooks/add-docs#keep-the-agent-flow-in-sync).

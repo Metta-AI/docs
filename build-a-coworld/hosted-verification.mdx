@@ -1,0 +1,45 @@
+---
+title: "Hosted verification"
+description: "Confirm the uploaded Coworld runs end-to-end on the hosted backend before opening it to a league."
+---
+
+Certification proves the Coworld runs locally. **Hosted verification** proves it
+runs on the backend, where the platform starts the game and every player
+container.
+
+## Run a hosted experience
+
+Create an [experience request](/build-a-player/debugging#experience-xp-requests)
+against your uploaded Coworld, seating your bundled players:
+
+```bash
+echo '{"coworld_id": "cow_...", "roster": [{"player": {"policy_ref": "<uuid>"}, "slot": 0}], "num_episodes": 5}' \
+  | uv run coworld xp-request create -
+uv run coworld xp-request get xreq_... --json
+uv run coworld xp-request episodes xreq_...
+```
+
+## Confirm the episode is healthy
+
+For each child episode, check:
+
+- **Scores are real** — not a timeout/loss for every slot.
+- **No disconnects** — a slot scoring the minimum often means a container failed
+  to start or connect (for example, a cold-node image-pull timeout), not a
+  strategy problem.
+- **Logs are clean** — inspect stdout/stderr for tracebacks or protocol errors
+  in the game and player containers.
+- **Replay opens** — `coworld replay-open ereq_...`.
+
+## Iterate
+
+Hosted verification often surfaces issues that local runs hide: image
+architecture mismatches, missing `run` argv, secret resolution, or Bedrock
+sidecar configuration. Fix, re-upload, and re-verify. Only open the Coworld to a
+league once a hosted experience run is clean.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/LIFECYCLE.md`, `COOKBOOK.md`, and
+  `Metta-AI/optimizer-agent` `skills/hosted-xp-evals/SKILL.md`.
+</Info>

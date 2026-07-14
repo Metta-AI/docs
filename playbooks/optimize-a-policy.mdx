@@ -1,0 +1,76 @@
+---
+title: "Optimize a policy"
+description: "Run an evidence-first optimization loop: evaluate, reconstruct, hypothesize, change one thing, verify with variance, promote or reject."
+---
+
+Once a policy is seeded and submitted, improve it with an **evidence-first loop**.
+The discipline matters more than any single change: state what you expect, gather
+data that would confirm or falsify it, change one thing, and verify against
+variance before promoting.
+
+```text
+observe → evaluate → reconstruct → analyze → hypothesize → change
+→ verify → promote/reject → record → repeat
+```
+
+## The loop
+
+<Steps>
+  <Step title="Define the objective">
+    League score, beating the top N, broad robustness — the objective determines
+    opponent selection, episode count, and the promotion threshold.
+  </Step>
+  <Step title="Run hosted evals">
+    Use [experience requests](/build-a-player/debugging#experience-xp-requests).
+    Use pairwise evals to diagnose and broad top-N/random evals to guard against
+    overfit. Persist every request body, episode row, replay, artifact, and log.
+  </Step>
+  <Step title="Reconstruct behavior">
+    Join replay state (what happened) with artifact state (what your policy saw
+    and why it acted). If the join keys are missing, add them before running a
+    large eval.
+  </Step>
+  <Step title="Triage logs first">
+    Inspect stdout/stderr for failed episodes. A traceback, malformed action, or
+    provider failure is a **policy bug**, not evaluation noise — fix it before
+    interpreting aggregate score.
+  </Step>
+  <Step title="Hypothesize and change one thing">
+    Write a specific, causal, falsifiable hypothesis with an expected metric
+    movement and a rollback condition. Make one scoped change per candidate so
+    the eval result is attributable.
+  </Step>
+  <Step title="Verify with variance">
+    Re-evaluate against the target, the previous champion, and broad guardrails,
+    with enough episodes to estimate stderr. Report mean, stderr, and
+    seat/role/opponent breakdowns.
+  </Step>
+  <Step title="Promote or reject">
+    Promote only when the candidate improves the objective, guardrails pass, the
+    failure rate does not increase, and the rollback ref is known. Never promote
+    on a single pairwise win.
+  </Step>
+</Steps>
+
+## The eval ladder
+
+`smoke → diagnostic → candidate → guardrail → promotion`. Never promote from
+smoke or diagnostic-only evidence. Split XP requests that are near the backend's
+max size into smaller batches and aggregate them.
+
+## Common failure modes
+
+- Wrong active player before upload/submit.
+- Using a policy **name** ref where the API expects a policy **version UUID**.
+- Artifacts missing because logs were fetched without `--artifact`.
+- Promotion based on one pairwise win while broad leaderboard score regresses.
+- Treating a slot scoring the minimum as a strategy problem when it was a
+  disconnect/no-show.
+
+<Info>
+  Sources: adapted from `Metta-AI/optimizer-agent` `AGENTS.md`,
+  `skills/coworld-operations/SKILL.md`, `skills/base-optimizer-framework/SKILL.md`,
+  and `skills/hosted-xp-evals/SKILL.md`. Game-specific eval sizing lives in the
+  game's own skills (for Crewrift, see
+  [Crewrift strategy](/games/crewrift/strategy)).
+</Info>

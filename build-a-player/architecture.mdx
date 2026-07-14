@@ -1,0 +1,75 @@
+---
+title: "Choose an architecture"
+description: "Scripted, LLM, or hybrid — map the game's mechanics to the simplest architecture that works."
+---
+
+Architecture follows mechanics. Answer the questions in
+[Choose a game](/build-a-player/choose-a-game#answer-these-before-writing-code)
+first, then map them to one of three shapes. When unsure, **seed scripted**,
+prove it runs and beats the reference, then let evidence justify adding
+cognition.
+
+## The three shapes
+
+### Scripted (deterministic decision function)
+
+**When:** fully observable, deterministic, small action set, tight latency. The
+"brain" is a pure function `observation -> action`; no model, no network.
+
+Pros: instant, free, perfectly reproducible, trivially unit-tested, no provider
+dependency to crash on. Start here unless the mechanics rule it out.
+
+### LLM-based / cognitive
+
+**When:** the decision needs open-ended reasoning, natural language, or judgement
+that is hard to script (dialogue, negotiation, semantic Q&A), **and** the latency
+budget tolerates a model call (or it can run off the critical path).
+
+<Warning>
+  An LLM policy that can crash or time out scores 0 / a loss. The LLM path must
+  **always** have a deterministic, legal fallback action.
+</Warning>
+
+### Cognitive + scripted hybrid (two-loop)
+
+**When:** partially observed and/or social/adversarial — fast reflexes needed
+every tick **and** slower strategic reasoning needed occasionally. Use a
+**two-loop** design: a fast deterministic inner loop that acts every tick, and a
+slower strategy loop (often an LLM) that updates a directive the inner loop
+follows. The inner loop never blocks on the strategy; directives carry a TTL and
+the runtime falls back to a default when the strategy is slow. The
+[Player SDK](/build-a-player/player-sdk) implements exactly this loop.
+
+## Decision table
+
+| Observable? | Deterministic? | Latency tolerant of a model call? | Architecture |
+| --- | --- | --- | --- |
+| Full | Yes | (n/a) | **Scripted** |
+| Partial / social | Either | Per-tick: no; strategically: yes | **Hybrid two-loop** |
+| Either | No / open-ended judgement | Yes | **LLM** (with scripted fallback) |
+
+## Structure for iteration
+
+However you build it, structure the package so you can change one thing and
+attribute the result:
+
+1. **Separate the brain from the transport.** Decision logic in a pure module
+   (no I/O); network/protocol glue in a thin transport module.
+2. **Type the observation.** Parse the raw payload into a validated model once,
+   at the transport edge.
+3. **Emit a per-episode artifact** (`metadata.json` + a decisions table) so you
+   can reconstruct why the policy acted (see
+   [Debugging](/build-a-player/debugging#player-artifacts)).
+4. **Keep one knob per concept** so a change is a one-line diff.
+
+## Example: Crewrift
+
+Crewrift is partially observed and adversarial with per-tick reflexes, so the
+`crewborg` reference agent uses the **hybrid two-loop** design on the Player SDK.
+Its Crewrift-specific strategy lives in the
+[Crewrift strategy](/games/crewrift/strategy) page.
+
+<Info>
+  Source: adapted from `Metta-AI/optimizer-agent`
+  `skills/seed-a-new-policy/SKILL.md`.
+</Info>

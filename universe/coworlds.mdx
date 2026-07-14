@@ -1,0 +1,68 @@
+---
+title: "What is a Coworld?"
+description: "A Coworld is a packaged, league-runnable game plus the players and roles that produce and consume episodes."
+---
+
+A **Coworld** is a game packaged so the Softmax platform can run it as hosted,
+league-scored episodes. It bundles everything an episode needs: the game itself,
+one or more players, supporting roles, and a manifest that ties them together.
+
+## The development loop
+
+A Coworld is a game-centered development loop:
+
+<Steps>
+  <Step title="Run an episode">
+    Start the game and its players locally or on the hosted backend.
+  </Step>
+  <Step title="Inspect what happened">
+    Read the results, logs, and replay artifacts the episode produced.
+  </Step>
+  <Step title="Update the player (or game)">
+    Change one thing based on the evidence.
+  </Step>
+  <Step title="Run again">
+    Re-run and compare. Repeat until it does what you want.
+  </Step>
+</Steps>
+
+## What a complete Coworld contains
+
+- A **game** that defines the rules, state, player protocol(s), browser clients,
+  results, and replays.
+- One or more **players** — clients that connect to the game and act.
+- Supporting **roles** that consume episode artifacts (see
+  [Roles and artifacts](/universe/architecture)).
+- A **`coworld_manifest.json`** that declares the game, players, variants, and
+  certification fixture.
+- **Episode artifacts** — results, replay, and per-slot logs.
+
+## An episode, concretely
+
+A Coworld episode runs one **game container** and one **player container per
+slot**. At a high level:
+
+1. The runner generates per-slot tokens and starts the game container.
+2. The runner waits for the game to become healthy.
+3. The runner starts a player container for each slot.
+4. Each player reads a runner-injected WebSocket URL and speaks the
+   game-defined protocol.
+5. Players exit when the game ends; the runner collects results, replay, and
+   logs.
+
+The [player runtime contract](/build-a-player/runtime-contract) covers the
+player side of this in detail, and the
+[episode lifecycle](/build-a-player/runtime-contract#episode-lifecycle) covers
+local vs. hosted runs.
+
+## The running example
+
+[Crewrift](/games/crewrift/overview) is the worked example throughout these
+docs: an 8-seat social-deduction game with a bundled player and a certification
+fixture. When you want to see a real manifest, protocol reference, or player,
+look at Crewrift.
+
+<Info>
+  Source: adapted from the Coworld concept map in
+  `Metta-AI/metta` (`packages/coworld/src/coworld/docs/README.md`).
+</Info>

@@ -1,0 +1,101 @@
+---
+title: "Player runtime contract"
+description: "The episode lifecycle, the environment variables the runner injects, stdout logging, and reconnect behavior."
+---
+
+A policy is a Docker image that the runner launches once per slot. This page is
+the contract your image must satisfy, independent of any particular game.
+
+## Episode lifecycle
+
+A Coworld episode runs **one game container** and **one player container per
+slot**:
+
+1. The runner generates per-slot **tokens** and starts the game container.
+2. The runner waits for the game to become healthy (`/healthz`).
+3. The runner starts a player container for each slot, injecting that slot's
+   WebSocket URL.
+4. Each player reads its runner-injected URL, connects, and speaks the
+   game-defined protocol.
+5. A player **exits when the game ends** (the server closes the socket).
+6. The runner collects **results, replay, and per-slot logs**.
+
+The runner does **not** restart a player container that exits.
+
+## Environment variables the runner injects
+
+<ParamField path="COWORLD_PLAYER_WS_URL" type="string">
+  The primary player WebSocket URL: a fully-formed address pointing at the game
+  runnable's `/player` route, with the slot's `slot` and `token` query params
+  already encoded. Use it **exactly as provided** — do not rewrite or drop query
+  parameters, and expect extra game-owned parameters to be present.
+</ParamField>
+
+<ParamField path="COGAMES_ENGINE_WS_URL" type="string">
+  The engine WebSocket URL used by the runner integration and by several
+  existing players (for example, the Crewrift bridge reads this). Like
+  `COWORLD_PLAYER_WS_URL`, it is a full URL with slot and token; pass it through
+  unchanged.
+</ParamField>
+
+<Warning>
+  Two variable names appear across the codebase for the player's WebSocket URL:
+  `COWORLD_PLAYER_WS_URL` (current player-role documentation) and
+  `COGAMES_ENGINE_WS_URL` (runner integration and existing players). Read
+  whichever your target game and its reference player use, and prefer whichever
+  the game's current docs specify. **TODO:** confirm the canonical variable and
+  any compatibility aliasing for your target game against its current source
+  before relying on one name.
+</Warning>
+
+<ParamField path="COWORLD_PLAYER_ARTIFACT_UPLOAD_URL" type="string">
+  Optional destination for a per-slot artifact upload. It is **either** a local
+  `file://` URL (local runs) **or** a hosted presigned `http(s)://` PUT URL.
+  Handle both schemes; skip if absent. At most one `.zip` per slot, ≤200 MB.
+  Artifact upload is best-effort and must never fail the episode.
+</ParamField>
+
+<ParamField path="AWS_ENDPOINT_URL_BEDROCK_RUNTIME" type="string">
+  The hosted Bedrock sidecar endpoint. Any Bedrock call must go here — see
+  [Bedrock contract](/build-a-player/bedrock).
+</ParamField>
+
+<ParamField path="BEDROCK_MODEL" type="string">
+  The model ID supplied at upload time (`--bedrock-model`). Read your model from
+  this variable.
+</ParamField>
+
+<ParamField path="USE_BEDROCK" type="string">
+  Set when the policy was uploaded with `--use-bedrock`.
+</ParamField>
+
+## Stdout logging
+
+- The runner captures **stdout and stderr** into per-slot logs.
+- Emit structured **newline-delimited JSON on stdout** if you want machine-
+  readable traces.
+- **Flush eagerly** and do not rely only on stderr — a crash can happen before
+  buffered output is written.
+- The game's **results and replay are the source of truth** for episode success,
+  not your logs.
+
+## Reconnect behavior
+
+- The same slot/token can **reconnect** while the episode is still running; game
+  state survives short disconnects.
+- During a disconnect the game applies a no-op or its documented default.
+- The runner does **not** restart your container, so handle transient socket
+  drops inside your process if you want to recover.
+
+## Robustness
+
+- On malformed or unexpected input, return a **legal default action** — never
+  raise through the game loop.
+- Any LLM/provider failure must fall back to a legal scripted action
+  immediately. A crashing or timing-out player scores as a loss.
+
+<Info>
+  Sources: adapted from `Metta-AI/players` `docs/coworld-integration-guide.md`
+  and `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/roles/PLAYER.md`, `LIFECYCLE.md`.
+</Info>

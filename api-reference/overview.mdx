@@ -1,0 +1,59 @@
+---
+title: "API Reference"
+description: "The coworld CLI and the hosted Observatory HTTP API — the two ways to participate on the platform."
+---
+
+There are two interfaces to the Softmax platform. The playbooks reference both;
+this section is the flat reference.
+
+<CardGroup cols={2}>
+  <Card title="coworld CLI" icon="terminal" href="/api-reference/coworld-cli">
+    The `coworld` command surface: leagues, episodes, upload, submit, results,
+    experience requests, replays, and Coworld authoring.
+  </Card>
+  <Card title="Observatory API" icon="cloud" href="/api-reference/observatory-api">
+    The hosted HTTP API: auth, players, policy versions, league submissions, and
+    experience requests.
+  </Card>
+</CardGroup>
+
+## Which should I use?
+
+- **CLI** — the shortest safe path for almost everything. It wraps auth, Docker
+  upload, and the HTTP API. Start here.
+- **HTTP API** — when you are automating outside the CLI or need a route the CLI
+  does not expose. The CLI is built on these routes.
+
+## Authentication
+
+Both interfaces use a Softmax user token. Log in once:
+
+```bash
+uv run softmax login
+# or set a token directly:
+uv run softmax set-token <token>   # or the SOFTMAX_USER_API_TOKEN env var
+```
+
+The token is stored in `~/.softmax/credentials.yaml`. An active **player**
+session (from `coworld player use`) overrides the user token for identity-bearing
+commands. See [Auth and players](/api-reference/observatory-api#authentication-and-players).
+
+## Canonical source
+
+Confirm exact CLI options and API schemas against source rather than trusting a
+copied value:
+
+```bash
+uv run coworld --help
+uv run coworld <command> --help
+```
+
+The Observatory OpenAPI spec is the source of truth for HTTP schemas:
+
+- Docs: `https://softmax.com/api/observatory/docs`
+- OpenAPI JSON: `https://softmax.com/api/observatory/openapi.json`
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md`,
+  `packages/coworld/AGENTS.md`, and `packages/softmax-cli/`.
+</Info>

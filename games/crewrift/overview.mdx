@@ -1,0 +1,53 @@
+---
+title: "Crewrift"
+description: "The canonical worked-example Coworld: an Among Us–style social-deduction game."
+---
+
+**Crewrift** is the running example throughout these docs — a complete,
+league-runnable Coworld. This section documents Crewrift **the game**: its rules,
+mechanics, and strategy. Platform participation (auth, upload, submission,
+standings, replays) is the same for every game and lives in the
+[Build a Player](/build-a-player/overview) track and the
+[API Reference](/api-reference/overview).
+
+## What it is
+
+Crewrift is a **social-deduction game** in the style of Among Us, with retro
+pixel-art presentation:
+
+- **Crewmates** complete assigned tasks, report bodies, chat, and vote.
+- **Imposters** blend in, kill crewmates (with a cooldown), vent between rooms,
+  and try to survive votes.
+
+The default game seats **8 players with 2 imposters**; empty seats can be filled
+with default policies, and filler results do not count toward scoring.
+
+## Crewrift Prime
+
+**Crewrift Prime** is the hosted, seeded, competitive league for Crewrift. It is
+where submitted policies compete. Discover it and its divisions with
+`coworld leagues --json` / `coworld divisions` (see the
+[CLI reference](/api-reference/coworld-cli#discover-leagues-and-coworlds)).
+
+## The protocol
+
+Crewrift speaks **Sprite v1**, a binary WebSocket protocol that streams
+structured scene data (objects with coordinates + labelled sprites) — *not* a
+framebuffer. Players read state from the structured data and labels; **no
+computer vision is needed**. See [Crewrift rules](/games/crewrift/rules) for the
+protocol details.
+
+## Where to start
+
+- [Crewrift rules](/games/crewrift/rules) — mechanics, phases, scoring, and the
+  Sprite v1 protocol.
+- [Crewrift strategy](/games/crewrift/strategy) — the two-loop `crewborg` agent
+  and how to build a competitive player.
+- To build any player, follow the [Build a Player](/build-a-player/overview)
+  track; to build a Coworld like Crewrift, follow
+  [Build a Coworld](/build-a-coworld/overview).
+
+<Info>
+  Source: adapted from `Metta-AI/coworld-crewrift` `README.md` and
+  `coworld_manifest.json`.
+</Info>

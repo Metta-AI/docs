@@ -1,0 +1,66 @@
+---
+title: "Choose a game"
+description: "Find a Coworld, download its package, and read its manifest before writing any policy code."
+---
+
+Before writing a policy, understand the game you are playing. Every Coworld ships
+a manifest and docs that tell you the protocol, the seat count, and the scoring.
+
+## Discover leagues and Coworlds
+
+```bash
+uv run softmax login
+uv run coworld leagues --json
+uv run coworld leagues <league_id> --json
+```
+
+## Download a Coworld package
+
+```bash
+uv run coworld download <coworld-name-or-id> --output-dir ./coworld
+```
+
+This gives you the `coworld_manifest.json` and the game image reference you need
+to run episodes locally.
+
+## Read the manifest
+
+The manifest is the contract. For the game you are targeting, note:
+
+- **`game.protocols.player`** — the wire protocol your policy must speak (see
+  [Player protocol](/build-a-player/player-protocol)).
+- **`game.config_schema` and the `tokens` bounds** — how many seats the game
+  supports.
+- **`game.results_schema`** — the `scores` array, one numeric score per slot.
+- **`game.docs`** — the game's README and rules.
+- **bundled `player`** — a reference player you can run and read.
+
+## Answer these before writing code
+
+Architecture follows mechanics. Read the game source and reference player, then
+answer:
+
+- **Observability** — full state, or hidden/partial (fog of war, hidden roles)?
+- **Determinism & branching** — deterministic with a small action set, or
+  stochastic/large/continuous?
+- **Latency budget** — how long is a tick/turn? Can you afford an LLM round-trip
+  inside it?
+- **Players & asymmetry** — how many seats, and does score depend on a
+  randomized role/seat?
+- **Score shape** — tight range, or wide with big penalties/bonuses?
+- **Protocol** — JSON/token protocol, or a custom binary protocol?
+
+These answers drive your [architecture choice](/build-a-player/architecture).
+
+## Example: Crewrift
+
+[Crewrift](/games/crewrift/overview) is an 8-seat social-deduction game
+(2 imposters by default). It is partially observed and adversarial, speaks the
+binary **Sprite v1** protocol, and ships the `notsus` reference player. Its
+game-specific rules and scoring live on the [Crewrift](/games/crewrift/rules)
+pages — not here — because they are game facts, not platform facts.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md` and
+  `Metta-AI/optimizer-agent` `skills/seed-a-new-policy/SKILL.md`.
+</Info>

@@ -1,0 +1,51 @@
+---
+title: "Implement bundled players"
+description: "Every Coworld ships at least a deterministic baseline player that certification exercises."
+---
+
+A Coworld bundles one or more **players** so episodes can run without any external
+submission. Certification requires that **every declared player runs**.
+
+## What to bundle
+
+- **A deterministic, no-LLM baseline.** Always. It is the reference every
+  submitted policy is measured against and the safest filler for empty seats.
+- **An LLM baseline** when the game is intended for LLM participation, so you can
+  demonstrate and certify that path too.
+
+## Players are clients, not orchestrators
+
+A bundled player is a **client**: it connects to the game, acts, and exits. It
+does not orchestrate the episode, spawn other containers, or own the game state.
+Keep the authority in the [game container](/build-a-coworld/game-container).
+
+## Robustness
+
+Bundled players follow the same
+[runtime contract](/build-a-player/runtime-contract) as submitted policies:
+
+- Return a legal default action on malformed/unexpected input.
+- Never crash through the game loop.
+- If the baseline uses an LLM, it must fall back to a legal scripted action on
+  any provider failure.
+
+## Reuse the player track
+
+Building a bundled player is the same work as
+[building a player](/build-a-player/overview): choose an architecture, optionally
+use the [Player SDK](/build-a-player/player-sdk), and package it as a
+`linux/amd64` image. The difference is that a bundled player ships **with** the
+Coworld and is referenced from the manifest, rather than uploaded separately.
+
+## Example: Crewrift
+
+Crewrift bundles **`notsus`**, a reference player, and its certification fixture
+seats **eight copies of `notsus`**. The `crewborg` two-loop agent is a separate,
+more sophisticated player built on the Player SDK — see
+[Crewrift strategy](/games/crewrift/strategy).
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/AUTHORING.md` and
+  `Metta-AI/coworld-crewrift` `coworld_manifest.json`.
+</Info>

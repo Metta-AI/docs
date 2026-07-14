@@ -1,0 +1,92 @@
+---
+title: "Debug hosted episodes"
+description: "Find episodes, read logs, open replays, and run experience requests to understand what your policy did."
+---
+
+Once your policy is submitted, use these tools to understand what it actually did
+in hosted episodes.
+
+## Find your episodes
+
+```bash
+uv run coworld episodes --round round_... --mine --with-replay --json
+uv run coworld episodes ereq_... --json
+```
+
+The episode row is the front door: `status`, per-policy `scores`,
+`error`/`error_type` on failure, `replay_url` once complete, and `live_url` while
+running.
+
+## Read logs
+
+```bash
+uv run coworld episode-logs ereq_... --game
+uv run coworld episode-logs ereq_... --game --download-dir logs/
+```
+
+For per-agent player logs of policies **you own**, use the ownership-scoped route
+`GET /v2/episode-requests/{ereq}/{policy_version_id}/policy-logs/{agent_idx}`.
+
+<Note>
+  Commands that go through `/jobs/{job_id}/...` (for example
+  `coworld episode-results`, `coworld episode-stats`, and per-agent
+  `episode-logs --mine`) are **Softmax team-only**; non-team users get 403 and
+  should use the episode row's `scores` and the ownership-scoped routes above.
+</Note>
+
+Always inspect stdout/stderr for failed episodes first — tracebacks, malformed
+actions, provider failures, and crash loops are policy/runtime bugs to fix before
+analyzing strategy.
+
+## Open replays
+
+```bash
+# hosted episode served through a local Docker game container:
+uv run coworld replay-open ereq_...
+# hosted episode served by Observatory:
+uv run coworld replay-open ereq_... --hosted
+```
+
+Treat `replay_url` as opaque game-owned replay bytes.
+
+## Experience (XP) requests
+
+An **experience request** asks the platform to run a batch of hosted episodes
+against a Coworld and fans out into child episodes you can inspect like any other.
+This is the right tool for policy-vs-policy evaluation.
+
+```bash
+echo '{"target": {"league_id": "league_..."}, "roster": [{"player": {"policy_ref": "<uuid>"}, "slot": -1}, {"player": {"top_n": 3}, "slot": -1}], "num_episodes": 40}' \
+  | uv run coworld xp-request create -
+uv run coworld xp-request get xreq_... --json
+uv run coworld xp-request episodes xreq_...
+```
+
+Children start `pending` and dispatch asynchronously. Each completed child
+carries a `replay_url` and its `ereq_...` works with every episode-inspection
+command above. There is no `xp-request cancel` subcommand yet — cancel via
+`POST /v2/experience-requests/xreq_.../cancel` or the UI.
+
+<Tip>
+  Persist the evidence for each evaluation: the request body, the request and
+  episode JSON, replays, artifacts, per-agent logs, and a short verdict. You
+  should be able to reconstruct why a policy changed from those files alone.
+</Tip>
+
+## Player artifacts
+
+If your player uploaded a per-slot `.zip` (via
+`COWORLD_PLAYER_ARTIFACT_UPLOAD_URL`), download it:
+
+```bash
+uv run coworld episode-logs ereq_... --agent 0 --artifact --download-dir logs/
+```
+
+Artifacts are the durable dataset for optimization — see
+[Optimize a policy](/playbooks/optimize-a-policy).
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md` and
+  `Metta-AI/optimizer-agent` `skills/coworld-operations/SKILL.md`,
+  `skills/hosted-xp-evals/SKILL.md`.
+</Info>

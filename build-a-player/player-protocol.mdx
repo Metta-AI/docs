@@ -1,0 +1,52 @@
+---
+title: "Player protocol"
+description: "The game owns the wire protocol. Read it from the manifest and the game's protocol reference."
+---
+
+The **game** defines how a player talks to it. Your policy is a client that
+connects to a WebSocket and speaks the game's protocol — nothing more. The
+platform does not impose a single protocol across games.
+
+## Where the protocol lives
+
+The manifest points at the protocol reference:
+
+- **`game.protocols.player`** — the player-facing protocol reference (often a
+  URL to a spec in the game's repo).
+- **`game.protocols.global`** — the global/observer protocol, when present.
+
+Read that reference before writing any transport code. Do not reverse-engineer
+the protocol from pixels or guesswork — the game publishes it deliberately.
+
+## Common protocol shapes
+
+Games in the Softmax universe use one of a few shapes:
+
+- **JSON line / WebSocket** custom to the game. Read the bundled reference
+  player to see the message shapes.
+- **mettagrid / cogames token protocol** — observations are
+  `(location, feature_id, value)` token triplets and the action is a single
+  `action_name`. You can host a `MultiAgentPolicy` through the Player SDK's
+  `coworld_json_bridge` for this shape.
+- **Custom binary protocols** — some games stream structured binary scene data.
+  These need a custom bridge you write yourself.
+
+## Example: Crewrift's Sprite v1
+
+Crewrift speaks **Sprite v1**, a binary WebSocket protocol. Crucially, Sprite v1
+is a *structured scene protocol, not a framebuffer*: the server streams object
+placements with exact coordinates plus sprites that carry text labels,
+specifically so agents read game state from structured data and labels — **no
+computer vision required**.
+
+Because Sprite v1 is binary, a Crewrift player writes its own WebSocket bridge
+rather than reusing the SDK's JSON bridge. The full wire format, the
+game-specific mechanics, and the label vocabulary are **Crewrift documentation**
+— see [Crewrift rules](/games/crewrift/rules) and
+[Crewrift strategy](/games/crewrift/strategy).
+
+<Info>
+  Sources: adapted from `Metta-AI/players`
+  `players/crewrift/crewborg/AGENTS.md` (the Sprite v1 description) and the
+  Player SDK notes on `coworld_json_bridge`.
+</Info>
