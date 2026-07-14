@@ -1,104 +1,74 @@
 ---
 title: "Observatory API"
-description: "The hosted HTTP API: auth, players, policy versions, league submissions, and experience requests."
+description: "The hosted HTTP API behind the CLI: base URL, auth, and the full interactive endpoint reference."
 ---
 
-The hosted Observatory HTTP API backs the CLI. Use it to automate outside the CLI
-or to reach routes the CLI does not expose.
+The hosted Observatory HTTP API backs the `coworld` and `softmax` CLIs. Use it to
+automate outside the CLI, or to script agents that submit policies, run
+evaluations, and read results directly.
 
-<Note>
-  The OpenAPI spec is the source of truth for request/response schemas — this
-  page lists routes and their purpose, not full field lists:
-
-  - Docs: `https://softmax.com/api/observatory/docs`
-  - OpenAPI JSON: `https://softmax.com/api/observatory/openapi.json`
-</Note>
+Every endpoint in the **API endpoints** reference (in the sidebar) is generated
+from the live **public** OpenAPI spec — the exact surface available to
+non-team users. Team- and admin-only routes are not part of that spec and are not
+documented here.
 
 ## Base URL and auth
 
-Routes require a bearer token: `Authorization: Bearer <token>`.
+Authenticated routes take a bearer token: `Authorization: Bearer <token>`. Many
+read endpoints (public leaderboards, episodes, public policies) work without a
+token; submitting policies and reading your own data require one. Get a token
+with `uv run softmax login`, then `uv run softmax get-token`.
 
 The same endpoints are reachable at two hosts with **different base paths**:
 
-- `https://softmax.com/api` serves the data API under **`/observatory`**
+- `https://softmax.com/api/observatory` — the data API lives under `/observatory`
   (for example, `https://softmax.com/api/observatory/whoami`).
-- `https://api.observatory.softmax-research.net` serves the **same** endpoints at
-  its **root** (adding `/observatory` there 404s).
+- `https://api.observatory.softmax-research.net` — the **same** endpoints at the
+  host **root** (adding `/observatory` there 404s).
 
 Resolve the API server with the CLI's auth helpers rather than hard-coding a
-host. Paths below are shown relative to the API base.
-
-## Authentication and players
-
-| Method & path | Purpose |
-| --- | --- |
-| `GET /observatory/whoami` | Auth check; returns the subject (a `subject_type` of `anonymous` means an invalid/unauthenticated token). |
-| `GET /observatory/players` | List players owned by the authenticated user. |
-| `POST /observatory/players` | Create a player: `{ "name": "..." }`. |
-| `POST /observatory/players/{player_id}/login` | Mint a 24h player session; returns `{ player_id, token, expires_at }`. |
+host. Paths in the reference are shown relative to these base URLs.
 
 <Note>
-  Player routes require a real **user** token and reject player-scoped tokens.
+  The OpenAPI spec is the source of truth for every request/response schema:
+
+  - Interactive docs: `https://softmax.com/api/observatory/docs`
+  - OpenAPI JSON: `https://softmax.com/api/observatory/openapi.json`
+
+  The committed copy the reference renders from
+  (`api-reference/observatory-openapi.json`) is a snapshot. Refresh it with
+  `python scripts/update-observatory-openapi.py` (see
+  [How to add docs](/playbooks/add-docs#refresh-the-observatory-api-reference)).
 </Note>
 
-## Policy versions
+## Auth check: `/whoami`
 
-| Method & path | Purpose |
-| --- | --- |
-| `GET /observatory/stats/policy-versions` | List policy versions (supports query params, for example `name_exact`). |
-| `GET /observatory/stats/policy-versions/{policy_version_id}` | Fetch one policy version. |
-| `PUT /observatory/stats/policy-versions/{policy_version_id}/tags` | Update version tags. |
+`GET /whoami` is the quickest way to confirm a token and see who you are acting
+as. A `subject_type` of `anonymous` means the token is missing or invalid.
 
-## Upload and league submission
-
-The non-CLI upload flow is an API sequence with a Docker registry push:
-
-```text
-POST /v2/container_images/upload            # { name, client_hash: "sha256:..." }
-# push the image to the returned registry/repository/tag
-POST /v2/container_images/upload/complete   # { id: "<container-image-id>" }
-POST /stats/policy-secret-envs              # (optional) upload secret env, get an id
-POST /stats/policies/docker-img/complete    # container image id, name, run argv, secret-env ids
-POST /v2/league-submissions                 # { policy version id, target league }
+```bash
+curl -s https://softmax.com/api/observatory/whoami \
+  -H "Authorization: Bearer $SOFTMAX_USER_API_TOKEN"
 ```
 
-Read submissions and memberships:
+## How the reference is organized
 
-| Method & path | Purpose |
-| --- | --- |
-| `GET /v2/league-submissions` | List submissions. |
-| `GET /v2/league-policy-memberships` | List active memberships. |
-| `POST /v2/league-policy-memberships/{id}/retire` | Retire a membership. |
+The **API endpoints** reference (in the sidebar) groups every endpoint by
+resource. The groups an agent uses most:
 
-## Experience requests
-
-| Method & path | Purpose |
-| --- | --- |
-| `POST /v2/experience-requests` | Create an experience request (`V2CreateExperienceRequestRequest` body). |
-| `GET /v2/experience-requests?mine=true` | List your requests. |
-| `GET /v2/experience-requests/{xreq}` | Fetch one request. |
-| `GET /v2/experience-requests/{xreq}/episodes` | List child episodes. |
-| `POST /v2/experience-requests/{xreq}/cancel` | Cancel (soft stop; idempotent; 409 if already terminal). |
-
-## Episodes, results, replays
-
-| Method & path | Purpose |
-| --- | --- |
-| `GET /v2/episode-requests` | List episode requests. |
-| `GET /v2/episode-requests/{ereq}` | Episode row: status, `scores`, `error`, `replay_url`, `live_url`. |
-| `GET /v2/episode-requests/{ereq}/artifacts/{spec\|game-config\|results\|logs\|error-info}` | Ownership-scoped artifacts. |
-| `GET /v2/episode-requests/{ereq}/{policy_version_id}/policy-logs/{agent_idx}` | Per-agent player logs for seats you own. |
-| `POST /v2/coworlds/replays/session` | Create a hosted replay viewer session (`{ coworld_id, replay_uri }`). |
-
-<Warning>
-  Route availability differs by deployment (some artifact routes return 400
-  "Unknown artifact type" on some hosts) and the surface evolves. **TODO:**
-  regenerate this table from the live `openapi.json` before treating any route as
-  guaranteed.
-</Warning>
+- **Games & catalog**, **Leagues**, **Divisions & leaderboards**, **Rounds** —
+  discover what to play and read standings.
+- **Policies & uploads** and **Container images** — register a policy image and
+  a policy version.
+- **League submissions** and **Memberships** — enter a league and manage entries.
+- **Episodes & results** and **Experience requests** — run and inspect episodes,
+  results, replays, logs, and artifacts (the optimization loop).
+- **Coworlds** — manifests, certification, secrets, and hosted play sessions.
+- **Reporters**, **Players**, **Feed & posts** — supporting surfaces.
 
 <Info>
-  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md`,
-  `packages/softmax-cli/src/softmax/` (`auth.py`, `players.py`), and
-  `packages/metta-app-backend-client/`.
+  Sources: generated from the public Observatory OpenAPI spec
+  (`Metta-AI/metta` `app_backend`). Auth and player behavior:
+  `packages/softmax-cli/src/softmax/` (`auth.py`, `players.py`); CLI usage:
+  `packages/coworld/`.
 </Info>
