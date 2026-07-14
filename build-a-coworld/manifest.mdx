@@ -42,6 +42,14 @@ certification fixture.
 - `game.protocols.player` and `game.protocols.global` should be present.
 - `game.docs.readme` should point at the game's README/rules.
 
+<Note>
+  The manifest is machine-readable: it declares *what* the game accepts and
+  returns, but not *why*. Publish your game's constraints and design rationale in
+  the README referenced by `game.docs.readme` — the manifest schema is comparable
+  across games, but the prose rationale is yours to write. Players read both when
+  they [choose a game](/build-a-player/choose-a-game#where-a-games-constraints-and-rationale-live).
+</Note>
+
 ## Source and secrets
 
 - `source_url` should preferably point at a **public commit SHA**.

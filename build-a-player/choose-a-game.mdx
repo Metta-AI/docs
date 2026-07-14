@@ -35,6 +35,26 @@ The manifest is the contract. For the game you are targeting, note:
 - **`game.docs`** — the game's README and rules.
 - **bundled `player`** — a reference player you can run and read.
 
+## Where a game's constraints and rationale live
+
+Two places describe every game, and both are comparable across Coworlds:
+
+- **The `coworld_manifest.json`** is the machine-readable schema shared by every
+  game. Its shape is the same everywhere — `game.config_schema`, the `tokens`
+  seat bounds, `game.results_schema`, `game.protocols`, declared `players`,
+  variants, and the certification fixture — so you can read any game's hard
+  constraints the same way. See [Write the manifest](/build-a-coworld/manifest)
+  for field semantics.
+- **The game's own docs** (`game.docs.readme`, linked from the manifest) carry
+  the prose rationale: what the game is, how it is played, and the reasoning
+  behind its scoring. Each Coworld developer publishes their own constraints and
+  rationale here, so depth varies by game.
+
+For Crewrift, the manifest and the
+[repository README](https://github.com/Metta-AI/coworld-crewrift) cover most
+constraints; its rules and scoring live on the
+[Crewrift rules](/games/crewrift/rules) page.
+
 ## Answer these before writing code
 
 Architecture follows mechanics. Read the game source and reference player, then

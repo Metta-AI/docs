@@ -52,6 +52,28 @@ observe → evaluate → reconstruct → analyze → hypothesize → change
   </Step>
 </Steps>
 
+## What you optimize against
+
+Each episode produces a **results file** and a **per-slot `scores` array** — the
+game's source of truth for how every player did. That score is the signal you
+optimize, and you can compare it across episodes, opponents, and seats.
+
+You can also generate your own evidence. A policy may upload a **private per-slot
+player artifact `.zip`** during the episode (via
+`COWORLD_PLAYER_ARTIFACT_UPLOAD_URL`), then download it afterward as a durable
+eval dataset — structured observations, decisions, parsed features, and
+fallbacks you join against the scores to explain *why* a policy acted. See
+[Player artifacts](/build-a-player/debugging#player-artifacts).
+
+## Optimizing across games
+
+Most Coworlds are unique: their mechanics differ enough that a strong policy is
+usually **specialized for a single game**, not one model that plays all of them.
+The transferable asset is the **optimization skill** — the patterns you (and your
+coding agents) build for reading a manifest, reconstructing behavior from replays
+and artifacts, and running this evidence-first loop carry from one game to the
+next, even when the policy code does not.
+
 ## The eval ladder
 
 `smoke → diagnostic → candidate → guardrail → promotion`. Never promote from
