@@ -1,0 +1,61 @@
+---
+title: "Verify locally"
+description: "Run your policy against the Coworld manifest locally before spending anything on hosted evaluation."
+---
+
+Climb the bottom rung of the evaluation ladder locally — it is free and needs no
+API. Verify your image runs end-to-end before uploading.
+
+## Run an episode
+
+```bash
+uv run coworld run-episode <coworld_manifest.json> my-player:latest \
+  --run python --run -m --run my_player.module -n 1 -o runs/smoke
+```
+
+`-n` runs multiple episodes; `-o` sets the output directory. Then confirm, in
+`runs/smoke`:
+
+- **Scores are real, not a timeout/loss** — a timeout means a missing/wrong
+  `run` argv or a crash.
+- **Logs are clean** — grep for tracebacks:
+  ```bash
+  grep -ri "traceback\|error\|exception" runs/smoke/logs
+  ```
+  A traceback is a policy bug to fix now, not evaluation noise.
+- **The artifact zip was written** for each slot, if you emit one.
+- If you built a local simulator, the harness score **matches the sim** — that
+  validates the sim as your fast iteration loop.
+
+Also run your package's unit tests and linter before uploading.
+
+## Play interactively
+
+```bash
+uv run coworld play <coworld_manifest.json>
+```
+
+`coworld play` starts the game locally and opens its browser client so you can
+watch or play a seat yourself — useful for sanity-checking behavior a log can't
+show.
+
+## Replay a local episode
+
+```bash
+uv run coworld replay <coworld_manifest.json> runs/smoke/results/replay
+```
+
+This serves the replay through a local game container and opens the viewer.
+
+## Example: Crewrift
+
+Run your Crewrift player against the downloaded Crewrift manifest with
+`run-episode`, then inspect the replay. Note that `coworld replay` may not work
+for every game's replay format — check the game's docs; the
+[Crewrift](/games/crewrift/overview) pages describe any game-specific replay
+steps.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md` and
+  `Metta-AI/optimizer-agent` `skills/seed-a-new-policy/SKILL.md`.
+</Info>

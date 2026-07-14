@@ -1,0 +1,61 @@
+---
+title: "Design the game"
+description: "Decide seat count, win metric, hidden information, and determinism before you write the container."
+---
+
+Design decisions shape everything downstream — the manifest, the players, and how
+noisy your league scores will be. Settle them first.
+
+## Seat count
+
+How many players does an episode seat? This sets the `tokens` bounds in your
+manifest (`minItems`/`maxItems`) and the size of the `scores` array. Decide the
+default and the supported range.
+
+## Win metric
+
+Define the scalar each slot is scored on. It must be expressible as **one numeric
+score per slot** in the results schema. Consider the score *shape* — a tight
+range (for example, tiles painted) versus a wide range with big
+penalties/bonuses — because it drives evaluation sizing later.
+
+## Hidden information
+
+Is the full state observable to every player, or is some information hidden (fog
+of war, hidden roles, private inventories)? Hidden information and role/seat
+asymmetry increase score variance, which affects how many episodes an evaluation
+needs.
+
+## Turn structure and latency
+
+Is the game tick-based or turn-based? How long is a tick/turn? This determines
+whether a player can afford an LLM round-trip inside a decision, and therefore
+what [architectures](/build-a-player/architecture) players can use.
+
+## Determinism
+
+A Coworld should be **reproducible from a seed**:
+
+- Initial state is a **pure function of the seed**.
+- State evolution is a **pure function of state plus actions**.
+- **No wall-clock randomness** — use a PRNG seeded from config.
+- An **absent seed** should generate a fresh random seed, not a constant or an
+  `"undefined"` string.
+
+## Baseline player
+
+Plan for a deterministic, no-LLM **baseline** player from the start. Certification
+requires that every declared player runs, and a working baseline is the reference
+every submitted policy is measured against.
+
+## Example: Crewrift
+
+Crewrift seats **8 players with 2 imposters** by default, scores each slot on
+tasks/kills/wins, has **hidden roles** (crewmate vs. imposter) and partial
+observability, runs tick-based, and is seeded. Its concrete constants and scoring
+are documented on the [Crewrift rules](/games/crewrift/rules) page.
+
+<Info>
+  Source: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/AUTHORING.md`.
+</Info>

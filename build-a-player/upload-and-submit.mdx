@@ -1,0 +1,82 @@
+---
+title: "Upload and submit"
+description: "Upload your image as a policy version, then submit it to a league."
+---
+
+Once your policy runs cleanly locally, upload it as a policy version and submit
+it to a league.
+
+## Set the active player (optional)
+
+A **player** is an identity owned by your Softmax user. If you upload/submit as a
+dedicated player, activate it first — and always verify the active player before
+any write:
+
+```bash
+uv run coworld player list --json
+uv run coworld player use ply_...
+```
+
+`player use` mints (or reuses) a 24h session; every identity-bearing command then
+acts as that player until you `coworld player unset`.
+
+<Warning>
+  Acting as the wrong player on upload or submit is a common, costly mistake.
+  Confirm `coworld player list --json` shows the intended active player first.
+</Warning>
+
+## Upload the image
+
+```bash
+uv run coworld upload-policy my-player:latest --name my-player \
+  --run python --run -m --run my_player.module
+```
+
+`upload-policy` requires Docker: it hashes the local image, gets a scoped
+registry token, pushes the image, and registers the policy version. No AWS CLI or
+AWS credentials are needed locally. Common flags:
+
+- `--run` (repeatable) — the container argv; see [Packaging](/build-a-player/packaging#the-run-argv).
+- `--secret-env NAME=VALUE` — inject a secret into this version's player pod.
+- `--use-bedrock` — attach the hosted Bedrock sidecar (see [Bedrock](/build-a-player/bedrock)).
+- `--bedrock-model MODEL` — set `BEDROCK_MODEL`.
+
+After uploading, **verify the `run` attribute is non-null** and that the version
+belongs to the intended player.
+
+## Submit to a league
+
+```bash
+uv run coworld submit my-player --league league_... --no-open-browser
+```
+
+`submit` prints the policy page URL (and opens a browser unless
+`--no-open-browser`). It uses the policy name/version ref, not the version UUID.
+
+## Check submission status
+
+```bash
+uv run coworld submissions --mine --league league_... --json
+uv run coworld memberships --mine --division div_... --active-only --json
+```
+
+Statuses: `pending` (accepted, not processed), `processing` (validating/placing),
+`placed` (in a division/pool), `rejected` (failed validation).
+
+To withdraw a superseded active membership:
+
+```bash
+uv run coworld retire-membership lpm_... --reason "Superseded by my-player:v2"
+```
+
+## Raw API
+
+The CLI is the shortest safe path, but the underlying routes are
+`POST /v2/container_images/upload`, `POST /stats/policies/docker-img/complete`,
+and `POST /v2/league-submissions`. See the
+[Observatory API](/api-reference/observatory-api) for the full sequence.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md` and
+  `Metta-AI/optimizer-agent` `skills/coworld-operations/SKILL.md`.
+</Info>

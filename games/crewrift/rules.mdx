@@ -1,0 +1,91 @@
+---
+title: "Crewrift rules"
+description: "Phases, mechanics, scoring, and the Sprite v1 protocol for Crewrift."
+---
+
+This page documents how Crewrift is played. These are **game facts** — they live
+here, not in the platform docs.
+
+<Warning>
+  Crewrift's constants and scoring are config-overridable and drift as the game
+  evolves (for example, the kill cooldown has differed between revisions).
+  **Verify any specific constant against the current game source
+  (`Metta-AI/coworld-crewrift`) before relying on it.**
+</Warning>
+
+## Objective
+
+- **Crewmates** win by completing all assigned tasks **or** voting out all
+  imposters.
+- **Imposters** win by killing crew down to parity (alive imposters ≥ alive
+  crewmates) **or** surviving the vote.
+
+Dead players become **ghosts**; a crewmate ghost can still finish its own tasks
+but takes no other actions.
+
+## Phases
+
+```text
+Lobby → RoleReveal → Playing → (Voting → VoteResult)* → GameOver
+```
+
+Inputs only do anything during **`Playing`** and **`Voting`** — all other phases
+ignore buttons. Meetings are triggered by reporting a body or pressing the
+emergency button; players chat, then vote (or skip). Ties and timeouts eject no
+one.
+
+## Mechanics and scoring (defaults — verify against source)
+
+| Constant | Value | | Reward | Value |
+| --- | --- | --- | --- | --- |
+| Target FPS | 24 | | Task complete | +1 |
+| Kill range | 20 px | | Kill | +10 |
+| Kill cooldown | ~500 ticks (≈20.8 s) | | Win (each winner) | +100 |
+| Vent range | 16 px | | Vote timeout (per non-voter) | −10 |
+| Report range | 20 px | | Stuck (idle crewmate) | −1 |
+| Task complete hold | 72 ticks (3 s) | | Map size | 1235×659 |
+| Tasks per player | 8 | | Screen/camera | 128×128 |
+
+Points are asymmetric: **+10 per kill** and **+100 per win** dominate **+1 per
+task**, so a league-score objective weights imposter performance and wins
+heavily. Movement is **momentum-based** (acceleration + friction + max speed), so
+navigation is a control problem, not teleport-to-target.
+
+<Note>
+  The kill-cooldown value in particular has been documented as both ~500 and ~900
+  ticks in different revisions. Treat the table as illustrative and read
+  `defaultGameConfig` in the current game source for authoritative values.
+</Note>
+
+## The Sprite v1 protocol
+
+Crewrift speaks **binary Sprite v1** over a WebSocket at the game's `/player`
+route. It is a **structured scene protocol, not a framebuffer** — the point is
+that agents read state from structured data and labels, without computer vision.
+
+The client maintains three tables as messages arrive:
+
+| Table | Keyed by | Holds |
+| --- | --- | --- |
+| **Layers** | layer id | type + flags + viewport size |
+| **Sprites** | sprite id | width, height, **text label**, RGBA pixels |
+| **Objects** | object id | **x, y** (camera-relative on `/player`), z, layer, sprite id |
+
+Server→client messages are incremental and stateful (define-sprite,
+define-object, delete-object, clear-objects, set-viewport, define-layer). Key
+facts for a player:
+
+- **Identity comes from sprite labels** (for example, `player <color>`,
+  `ghost <color>`, `body <color>`, `imposter icon`, `task counter N`,
+  `progress bar N%`) — not from pixels.
+- On `/player`, **coordinates are camera-relative**: the camera is centered on
+  your player. Recover the camera from the map object and convert to world space.
+- Your own player is the implicit camera center — read your color/role/state from
+  HUD sprites, not from a self object.
+- A `tick N` marker sprite carries the authoritative server tick per frame.
+
+<Info>
+  Sources: adapted from `Metta-AI/coworld-crewrift` `README.md`,
+  `docs/rules.md`, `docs/sprite_v1.md`, and the Sprite v1 description in
+  `Metta-AI/players` `players/crewrift/crewborg/AGENTS.md`.
+</Info>

@@ -1,0 +1,61 @@
+---
+title: "Implement the game container"
+description: "The game container is the authority: it runs the rules, speaks the protocol, and writes results and replay."
+---
+
+The **game container** is the authority for an episode. It owns the rules, the
+player protocol, results, and replay. The runner starts one game container per
+episode and one player container per slot.
+
+## Responsibilities
+
+The game container must:
+
+- **Fail loudly at startup** for missing required configuration — do not run with
+  bad config.
+- **Expose a health endpoint** (`/healthz`) so the runner knows when to start
+  players.
+- **Serve the player protocol** — accept a WebSocket connection per slot,
+  validate the slot token, and speak the game-defined protocol.
+- **Bound all waits** — connection, action, and retry waits must have timeouts.
+- **Validate incoming actions** and fall back to a documented default (or
+  baseline action) for invalid, missing, or disconnected players.
+- **Write complete artifacts** — full `results` and a `replay` for every episode.
+- **Support replay mode** using the same image (for example, loading a replay
+  URI and serving the viewer).
+- **Keep secrets out of logs** and out of structured artifacts.
+
+## Determinism in the container
+
+Enforce the determinism invariant from [Design](/build-a-coworld/design#determinism):
+seed the PRNG from config, never read wall-clock randomness, and generate a fresh
+seed when none is supplied.
+
+## Reconnect handling
+
+The same slot/token may reconnect while the episode is running. Keep game state
+alive across short disconnects and apply a no-op or documented default for a
+disconnected slot. Do not expect the runner to restart player containers.
+
+## Health and lifecycle
+
+```text
+runner: start game container
+runner: poll /healthz until healthy
+runner: start player containers (one per slot), inject each slot's WS URL
+game:   run the episode, collect actions, advance state
+game:   on end, write results + replay, close sockets
+runner: collect results, replay, per-slot logs
+```
+
+## Example: Crewrift
+
+Crewrift's game container is implemented in Nim, serves the `/player` route with
+the Sprite v1 protocol, and writes a replay the viewer can load. Those are
+game-specific details — see [Crewrift](/games/crewrift/overview).
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/AUTHORING.md`, `LIFECYCLE.md`, and
+  `roles/*.md`.
+</Info>

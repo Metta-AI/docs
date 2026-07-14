@@ -1,0 +1,112 @@
+---
+title: "How to add docs to docs.softmax.com"
+description: "Add or edit a page in the metta-ai/docs repo, register it in docs.json, preview locally, and open a PR."
+---
+
+This site is built with [Mintlify](https://mintlify.com) from the
+**`metta-ai/docs`** repository. This page is the procedure for adding or editing a
+page. The agent-facing version of this procedure lives in the repo's `AGENTS.md`
+and `playbooks/add-doc-page.md` — keep them in sync.
+
+## Repository layout
+
+```text
+docs.json                 # Mintlify config: site metadata + navigation
+index.mdx                 # Welcome / landing page
+universe/                 # What a Coworld is; roles and artifacts
+build-a-player/           # Build a Player track
+build-a-coworld/          # Build a Coworld track
+api-reference/            # coworld CLI + Observatory API
+playbooks/                # Repeatable procedures (this page lives here)
+games/crewrift/           # Game-specific docs for Crewrift
+logo/  favicon.svg        # Brand assets
+AGENTS.md                 # Agent-facing instructions + style rules
+playbooks/add-doc-page.md # Agent procedure mirroring this page
+```
+
+Pages are **MDX** files (Markdown + JSX components) with YAML frontmatter.
+
+## Add a new page
+
+<Steps>
+  <Step title="Clone the repo">
+    ```bash
+    git clone https://github.com/metta-ai/docs.git
+    cd docs
+    ```
+  </Step>
+  <Step title="Create the .mdx file">
+    Put it in the right section directory. Every page needs frontmatter:
+    ```mdx
+    ---
+    title: "Page title"
+    description: "One-sentence summary for search and previews."
+    ---
+
+    Your content here.
+    ```
+    Respect the platform-vs-game boundary: platform participation goes in the
+    tracks or API reference; game rules/strategy go under `games/`.
+  </Step>
+  <Step title="Register it in docs.json navigation">
+    Add the page's path (without the `.mdx` extension) to the correct `group` in
+    the correct `tab`. A page that is not listed in `docs.json` will not appear
+    in the sidebar. For example, to add a Build a Player page:
+    ```json
+    {
+      "group": "Build a Player",
+      "pages": [
+        "build-a-player/overview",
+        "build-a-player/my-new-page"
+      ]
+    }
+    ```
+  </Step>
+  <Step title="Preview locally">
+    Install the Mintlify CLI once, then run the dev server from the repo root:
+    ```bash
+    npm i -g mint
+    mint dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000). Check that your page
+    renders, appears in the nav, and has no broken links:
+    ```bash
+    mint broken-links
+    ```
+  </Step>
+  <Step title="Open a PR">
+    ```bash
+    git checkout -b docs/my-new-page
+    git add .
+    git commit -m "Add my-new-page to Build a Player"
+    git push -u origin docs/my-new-page
+    ```
+    Open a pull request against the default branch.
+  </Step>
+</Steps>
+
+## Deploy flow
+
+Changes are deployed to **[docs.softmax.com](https://docs.softmax.com)**
+automatically after the PR is merged to the default branch. There is no manual
+deploy step. Verify your change on the live site after the merge completes.
+
+## Style conventions
+
+- Use **active voice** and second person ("you").
+- Keep sentences concise — one idea per sentence.
+- Use **sentence case** for headings.
+- **Bold** UI elements: click **Settings**.
+- Use `code` formatting for file names, commands, paths, and code references.
+- Do not invent API contracts or source content — adapt from the source repos
+  and mark genuinely-missing details with a clear **TODO**.
+
+## Keep the agent flow in sync
+
+A Devin playbook and this repo's `AGENTS.md` describe the **same** procedure so
+that a human and an agent add docs identically. If you change the workflow here
+(new directory, new nav rule, new preview command), update:
+
+- `AGENTS.md` in `metta-ai/docs`,
+- `playbooks/add-doc-page.md` in `metta-ai/docs`,
+- the reusable Devin Playbook for this repo.

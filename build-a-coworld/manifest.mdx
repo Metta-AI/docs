@@ -1,0 +1,85 @@
+---
+title: "Write the manifest"
+description: "coworld_manifest.json declares the game, players, schemas, tokens, variants, and certification fixture."
+---
+
+The **`coworld_manifest.json`** ties a Coworld together. It declares the game and
+players, the config and results schemas, the `tokens` field, variants, and the
+certification fixture.
+
+<Note>
+  The manifest schema is generated from source
+  (`packages/coworld/src/coworld/types.py` in `Metta-AI/metta`) — treat the
+  generated schema JSON as the field-level source of truth and validate against
+  it. This page describes semantics, not every field.
+</Note>
+
+## Required and optional roles
+
+- **Required:** `game` and `player`.
+- **Optional:** `reporter`, `commissioner`, `grader`, `diagnoser`, `optimizer`
+  (some are marked future-required in schema metadata).
+
+## `game.config_schema` and `tokens`
+
+- `game.config_schema` must include a **string-array `tokens`** field.
+- `tokens` requires **`minItems`** and **`maxItems`** (the seat range).
+- **Variants and certification configs omit `tokens`** — the runner injects the
+  per-slot tokens at dispatch.
+
+## `game.results_schema`
+
+- Must contain a **`scores` array** with one numeric score per slot.
+- This is the source of truth for episode success.
+
+## `players`
+
+- Each declared player references an image and a `run` argv.
+- The **certification fixture must seat every declared player**.
+
+## Protocols and docs
+
+- `game.protocols.player` and `game.protocols.global` should be present.
+- `game.docs.readme` should point at the game's README/rules.
+
+## Source and secrets
+
+- `source_url` should preferably point at a **public commit SHA**.
+- The public manifest `env` must **not** contain secrets. Reference hosted
+  secrets with `secret://coworld/<name>/<key>` and upload them with
+  `coworld secret put` — see the
+  [CLI reference](/api-reference/coworld-cli#secrets).
+
+## Regenerating the schema
+
+When you change manifest models, regenerate the checked-in schema JSON rather
+than hand-editing it, then run the manifest tests. See
+[Build, certify, upload](/build-a-coworld/build-certify-upload).
+
+## Example: Crewrift's manifest
+
+The Crewrift manifest is the reference to compare against
+(from `Metta-AI/coworld-crewrift/coworld_manifest.json`, at the inspected
+revision):
+
+| Field | Value |
+| --- | --- |
+| `game.name` | `crewrift` |
+| `tokens.minItems` / `maxItems` | `8` / `16` |
+| default variant | 8 named players |
+| bundled player | `notsus` |
+| certification fixture | eight `notsus` seats, reduced tasks |
+| `game.protocols.player` | Sprite v1 |
+| `game.docs.readme` | Crewrift README |
+
+<Warning>
+  Manifest values (versions, seat counts, task counts) drift as games evolve.
+  Read the current `coworld_manifest.json` from the game's repo rather than
+  trusting a copied value.
+</Warning>
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/COWORLD_MANIFEST.md` and
+  `Metta-AI/coworld-crewrift` `coworld_manifest.json`.
+</Info>

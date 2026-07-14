@@ -1,0 +1,67 @@
+---
+title: "Package as a Docker image"
+description: "A policy is a linux/amd64 Docker image that connects, plays, and exits."
+---
+
+A policy is a **`linux/amd64` Docker image** that:
+
+1. Reads its WebSocket URL from the environment
+   (`COWORLD_PLAYER_WS_URL` or `COGAMES_ENGINE_WS_URL` — see the
+   [runtime contract](/build-a-player/runtime-contract#environment-variables-the-runner-injects)).
+2. Connects to the game WebSocket.
+3. Speaks the game-specific [protocol](/build-a-player/player-protocol).
+4. Exits when the episode ends.
+
+## Build
+
+Always build for `linux/amd64`, even on an ARM machine:
+
+```bash
+docker buildx build --platform=linux/amd64 --load -t my-player:latest .
+```
+
+Use a slim Python base, and make your package importable so the runner can start
+it with a `python -m ...` entrypoint.
+
+## The `--run` argv
+
+The uploaded policy version must have a non-null **`run`** attribute — the argv
+the container runs. A missing or wrong `run` makes **every episode time out and
+score a loss**, regardless of how good your strategy is. Each argv token needs
+its own `--run` flag at upload time:
+
+```bash
+uv run coworld upload-policy my-player:latest --name my-player \
+  --run python --run -m --run my_player.module
+```
+
+Use `--run` repeatedly whenever the default image command is not the player
+entrypoint. After uploading, **verify the `run` attribute is non-null** on the
+new version.
+
+## Secrets — never bake them in
+
+Do not bake secrets into images or public manifests. Provide them at upload time:
+
+```bash
+uv run coworld upload-policy my-player:latest --name my-player \
+  --run python --run -m --run my_player.module \
+  --secret-env API_KEY=...
+```
+
+Secrets are stored in AWS Secrets Manager and injected only into that policy
+version's player pod. For Bedrock, prefer `--use-bedrock` (no key needed) — see
+[Bedrock contract](/build-a-player/bedrock).
+
+## Best-effort artifact upload
+
+If the runner sets `COWORLD_PLAYER_ARTIFACT_UPLOAD_URL`, you may upload one
+`.zip` per slot (≤200 MB). Handle **both** the `file://` (local) and
+`http(s)://` presigned-PUT (hosted) schemes, and never let an upload failure
+crash the episode.
+
+<Info>
+  Sources: adapted from `Metta-AI/players`
+  `docs/coworld-player-packaging.md` and `Metta-AI/optimizer-agent`
+  `skills/seed-a-new-policy/SKILL.md`.
+</Info>

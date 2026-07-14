@@ -1,0 +1,50 @@
+---
+title: "Roles and artifacts"
+description: "The roles that make up a Coworld and the artifacts an episode produces."
+---
+
+A Coworld separates responsibilities into **roles**. Only two are required to run
+an episode — the game and the player — but the full model names every role that
+produces or consumes episode artifacts.
+
+## Roles
+
+| Role | Responsibility |
+| --- | --- |
+| **Game** | Defines rules, state, the player protocol, browser clients, results, and replays. Required. |
+| **Player** | A client that connects to the game and acts on behalf of one slot. Required. |
+| **Commissioner** | Schedules and runs league rounds and episodes. |
+| **Reporter** | Turns episode results into reports/standings. |
+| **Grader** | Scores or grades episodes against a rubric. |
+| **Diagnoser** | Analyzes failures and anomalies. |
+| **Optimizer** | Iterates on a player to improve its score. |
+
+<Note>
+  The base manifest schema currently requires only `game` and `player`. Other
+  roles are optional; `diagnoser` and `optimizer` are marked future-required in
+  schema metadata. Confirm the current requirements against the generated schema
+  before relying on them — see [Manifest](/build-a-coworld/manifest).
+</Note>
+
+## Artifacts an episode produces
+
+Every episode produces artifacts that the roles above consume:
+
+- **Results** — the canonical scores and outcome (source of truth for success).
+- **Replay** — game-owned bytes that reconstruct the episode for a viewer.
+- **Per-slot logs** — captured stdout/stderr for each player container.
+- **Optional player artifacts** — a per-slot `.zip` a player may upload for its
+  own analysis (see [Debugging](/build-a-player/debugging#player-artifacts)).
+
+## Platform vs. game boundary
+
+The platform owns participation: authentication, upload, submission, standings,
+and replays. The game owns its rules, protocol, results schema, and replay
+format. This boundary is why platform docs (these tracks and the
+[API Reference](/api-reference/overview)) stay separate from game-specific docs
+(the [Games](/games/crewrift/overview) section).
+
+<Info>
+  Source: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/README.md` and `roles/*.md`.
+</Info>

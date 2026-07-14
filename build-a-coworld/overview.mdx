@@ -1,0 +1,58 @@
+---
+title: "Build a Coworld"
+description: "Turn a game into a certified, league-runnable Coworld by climbing the authoring ladder."
+---
+
+This track turns a game into a **Coworld** — a package the platform can run as
+hosted, league-scored episodes. Follow the authoring ladder: each rung must work
+before you climb the next.
+
+## The authoring ladder
+
+<Steps>
+  <Step title="Engine tests">
+    Your game engine passes its own tests. This is the foundation.
+  </Step>
+  <Step title="coworld run-episode">
+    The packaged game runs a full local episode against your bundled players.
+  </Step>
+  <Step title="coworld play">
+    You can watch/play the game in its browser client locally.
+  </Step>
+  <Step title="coworld certify">
+    The Coworld passes certification — every declared player runs and artifacts
+    are produced.
+  </Step>
+  <Step title="coworld upload-coworld">
+    The Coworld is uploaded and available on the platform.
+  </Step>
+  <Step title="A hosted experience run">
+    A hosted episode confirms the Coworld works end-to-end on the backend.
+  </Step>
+</Steps>
+
+## What you will build
+
+- A **[design](/build-a-coworld/design)** — seat count, win metric, hidden
+  information, and determinism.
+- A **[game container](/build-a-coworld/game-container)** that runs the game and
+  speaks the player protocol.
+- **[Bundled players](/build-a-coworld/bundled-players)** — at least a
+  deterministic baseline.
+- A **[manifest](/build-a-coworld/manifest)** (`coworld_manifest.json`) with
+  config/results schemas and `tokens`.
+- **[Variants and a certification fixture](/build-a-coworld/variants-and-certification)**.
+- The **[build, certify, and upload](/build-a-coworld/build-certify-upload)**
+  steps, then **[hosted verification](/build-a-coworld/hosted-verification)**.
+
+## Example: Crewrift
+
+[Crewrift](/games/crewrift/overview) is a complete worked Coworld: an 8-seat game
+with a `notsus` bundled player and a certification fixture that seats eight copies
+of it. Its manifest is the reference to compare yours against.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/AUTHORING.md`, `LIFECYCLE.md`,
+  `COWORLD_MANIFEST.md`.
+</Info>

@@ -1,0 +1,69 @@
+---
+title: "The Player SDK"
+description: "A generic two-loop framework for building agents: a fast symbolic inner loop plus a slower strategy loop."
+---
+
+The **Player SDK** (`players.player_sdk`) is a generic, transport- and
+game-agnostic Python framework for building agents with a fast symbolic inner
+loop plus a slower strategy loop. It is optional — a scripted policy needs no
+framework — but it gives you the loop, fallbacks, and tracing for
+[hybrid architectures](/build-a-player/architecture#cognitive--scripted-hybrid-two-loop).
+
+## The two-loop model
+
+```text
+perceive ──► update_belief ──► mode.decide ──► resolve_action ──► wire command
+   ▲                                                                 (per tick)
+   │   reflexes (priority-ordered, urgent overrides)
+   │
+   └── strategy loop (slower):  BeliefSnapshot ──► validated ModeDirective
+```
+
+The **inner loop never blocks on strategy**. If no fresh directive is ready, the
+runtime applies a configured **default directive**. Directives carry a **TTL**;
+on expiry the runtime falls back to default. This keeps the agent live even when
+the strategy (for example, an LLM call) is slow or stalls.
+
+## What you implement
+
+The SDK is generic over six type parameters
+(`Observation, Percept, Belief, ActionState, Intent, Command`). You supply the
+game-specific parts:
+
+1. **Types** for each of the six parameters.
+2. **`perceive(observation, tick) -> percept`** — interpret the raw scene.
+3. **`update_belief(belief, percept) -> None`** — fold the percept into belief.
+   Belief is the only interface the strategy sees.
+4. **`resolve_action(intent, belief, action_state) -> command`** — translate a
+   symbolic intent into wire packets. All transport mechanics live here.
+5. **`Mode` subclasses** — deterministic local policies with typed params,
+   registered in a `ModeRegistry`.
+6. **`Strategy`** — reads a `BeliefSnapshot`, returns a validated
+   `ModeDirective` (mode + typed params + TTL), run via a `*StrategyRunner`.
+
+## Design rules
+
+- Raw observations (and pixels) stay out of belief; belief is the strategy
+  interface.
+- Modes emit **symbolic intents**, never transport actions.
+- Movement, button timing, chat buffers, and UI mechanics go in the **action
+  resolver**, not modes.
+- Never hold a snapshot read/write lock across an LLM/network call.
+- Use reflexes for urgent events; use TTLs + default directives so the agent
+  stays live when the strategy stalls.
+
+## Transport: the part the SDK does not do
+
+The SDK's `coworld_json_bridge` speaks the JSON `coworld.player.v1` protocol
+(token-triplet observations, a single `action_name`) and hosts a mettagrid
+`MultiAgentPolicy` — good for grid/token games. For a **binary** game like
+Crewrift you write your own WebSocket bridge that reads the injected URL, decodes
+the protocol, drives `runtime.step(...)` each tick, and exits when the socket
+closes.
+
+<Info>
+  Sources: adapted from `Metta-AI/players`
+  `players/player_sdk/` and `players/crewrift/crewborg/AGENTS.md`. **TODO:**
+  link the public Player SDK reference (`metta_cogames_framework/README.md`,
+  `PYTHON_FRAMEWORK.md`) once it is published to a public location.
+</Info>

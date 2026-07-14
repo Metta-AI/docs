@@ -1,0 +1,75 @@
+---
+title: "Crewrift strategy"
+description: "How the crewborg two-loop agent plays Crewrift, and what to consider when building your own player."
+---
+
+Crewrift is partially observed and adversarial, with fast per-tick reflexes and
+slower social/strategic reasoning. This page describes the reference approach and
+Crewrift-specific considerations. For the general player workflow, follow the
+[Build a Player](/build-a-player/overview) track.
+
+## The reference agent: crewborg
+
+**Crewborg** is a Player-SDK–based Crewrift agent built on the
+[hybrid two-loop](/build-a-player/architecture#cognitive--scripted-hybrid-two-loop)
+design:
+
+```text
+  crewborg              Crewrift-specific perception, belief, modes, strategy
+     │ builds an AgentRuntime; feeds scene state, sends input packets
+     ▼
+  Player SDK            generic two-loop framework (AgentRuntime + modes + strategy)
+     │ binary Sprite v1 WebSocket (crewborg writes this bridge itself)
+     ▼
+  Crewrift game server  authoritative game; defines the rules
+```
+
+The SDK gives crewborg the loop and scaffolding. Crewborg supplies everything
+game-specific: it maintains Crewrift's scene state as belief, decides modes, and
+resolves symbolic intents into Sprite v1 button/chat packets. Because Sprite v1
+is binary, crewborg writes its **own** WebSocket bridge rather than using the
+SDK's JSON bridge.
+
+## Role-specific behavior
+
+Crewborg plays both roles:
+
+- **Crewmate:** navigate to and complete tasks, attend meetings, vote, report
+  bodies, and flee danger. A crewmate ghost keeps completing its own tasks.
+- **Imposter:** Search (acquire a target), Hunt (gated on a visible kill
+  opportunity), then Evade after a fresh kill; Pretend fakes real task stations
+  in likely-occupied rooms. The imposter may report non-fresh visible bodies to
+  deflect suspicion.
+
+Meetings have an opt-in **LLM chat/vote path with a deterministic fallback** —
+consistent with the rule that any LLM path must degrade to a legal scripted
+action.
+
+## Crewrift-specific considerations
+
+- **Points asymmetry.** Kills (+10) and wins (+100) dominate tasks (+1). A
+  league-score objective weights imposter play and winning — see
+  [Crewrift rules](/games/crewrift/rules#mechanics-and-scoring-defaults-verify-against-source).
+- **Momentum-based movement.** Navigation is a control problem: plan routes over
+  the walkable map and use a controller that respects acceleration/friction, not
+  teleport-to-target. Movement mechanics belong in the action resolver, not in
+  modes.
+- **Camera-relative coordinates.** Convert object positions to world space using
+  the map object before reasoning spatially.
+- **Reflexes for urgent events.** Use priority-ordered reflexes (for example,
+  reacting to an imminent kill or a called meeting) so the agent does not wait
+  for the slow strategy loop.
+
+## Evaluation notes
+
+Crewrift scores are high-variance (hidden roles, seat asymmetry, 8 seats), so
+size evaluations accordingly and exclude disconnect/no-show episodes (a slot at
+the minimum score with zero ticks is a disconnect, not a strategy result). Follow
+the general [optimize a policy](/playbooks/optimize-a-policy) loop.
+
+<Info>
+  Sources: adapted from `Metta-AI/players`
+  `players/crewrift/crewborg/AGENTS.md` and `Metta-AI/optimizer-agent`
+  Crewrift skills. **TODO:** link the public crewborg design doc and
+  Crewrift eval-design skill once published.
+</Info>

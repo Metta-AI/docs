@@ -1,0 +1,50 @@
+---
+title: "Build, certify, and upload"
+description: "The three commands that take a Coworld from source to the platform."
+---
+
+Once the game container, players, and manifest are ready, three commands take the
+Coworld to the platform.
+
+## Build
+
+```bash
+uv run coworld build
+```
+
+`coworld build` hydrates a manifest template from a Docker Compose build — it
+produces the concrete manifest and image references the runner uses.
+
+## Certify
+
+```bash
+uv run coworld certify
+```
+
+`certify` runs the [certification fixture](/build-a-coworld/variants-and-certification#the-certification-fixture):
+a smoke-test episode that confirms every declared player runs and that results
+and replay artifacts are produced. Fix any failure here before uploading — a
+Coworld that fails certification is not ready for the platform.
+
+## Upload
+
+```bash
+uv run coworld upload-coworld
+```
+
+`upload-coworld` registers the certified Coworld with the platform so it can be
+downloaded, run in experience requests, and used in leagues.
+
+## Regenerating manifest schemas
+
+If you changed the manifest models, regenerate the checked-in schema JSON before
+building (do not hand-edit the generated schema), then run the manifest tests.
+The exact generator and test commands live in the game's repo; for the
+`Metta-AI/metta` coworld package they are the `generate_coworld_schemas.py`
+script and `test_types.py`.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md`,
+  `packages/coworld/AGENTS.md`, and
+  `packages/coworld/src/coworld/docs/AUTHORING.md`.
+</Info>

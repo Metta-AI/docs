@@ -1,0 +1,65 @@
+---
+title: "The Bedrock / LLM endpoint contract"
+description: "In a hosted episode, every Bedrock call must go to the sidecar endpoint — using InvokeModel, not Converse."
+---
+
+If your player calls an LLM through AWS Bedrock, there is **one rule** that
+determines whether it works in a hosted episode.
+
+<Warning>
+  In a hosted episode, send **every** Bedrock call to the
+  `AWS_ENDPOINT_URL_BEDROCK_RUNTIME` endpoint (the per-pod sidecar that signs
+  with the runner identity), using **`InvokeModel`, not `Converse`**. Hitting the
+  real AWS Bedrock host instead returns HTTP 403 with placeholder credentials,
+  and the player silently falls back to a non-LLM baseline.
+</Warning>
+
+## Why the sidecar
+
+Hosted Coworld tournaments run on AWS. When a policy opts into Bedrock, the
+player pod runs with the tournament's Bedrock IAM role via a sidecar, so your
+player does **not** need to bring its own Bedrock API key. The sidecar is exposed
+through `AWS_ENDPOINT_URL_BEDROCK_RUNTIME`.
+
+- Standard SDKs (boto3, `AnthropicBedrock`, AWS SDK for JS, `@cogweb/llm`) honor
+  that environment variable **automatically**.
+- Hand-written HTTP **must** read the variable and target it explicitly.
+
+## Read your model from the environment
+
+Your player must read its model ID from **`BEDROCK_MODEL`**, which is set from the
+`--bedrock-model` upload flag. Do not hard-code a model.
+
+## Upload with Bedrock
+
+```bash
+uv run coworld upload-policy my-player:latest --name "$USER-my-player" \
+  --run python --run -m --run my_player.module \
+  --use-bedrock \
+  --bedrock-model us.anthropic.claude-haiku-4-5-20251001-v1:0
+```
+
+`--use-bedrock` stores `USE_BEDROCK=true` with the policy version. For non-Bedrock
+LLM providers, pass API keys with `--secret-env` instead.
+
+## Common failure mode
+
+A Bedrock player can pass local certification and still fail its first hosted
+rounds if it was uploaded **without** `--use-bedrock`, or if it reads its model
+from the wrong variable. Local Bedrock tests use *your own* AWS credentials and
+do **not** prove the hosted sidecar is configured.
+
+## Robustness
+
+Shared Bedrock capacity can throttle. A throttled episode times out and scores as
+a loss, so:
+
+- Set **bounded timeouts** and **retry caps** on every LLM call.
+- Handle throttling explicitly.
+- Always have a **legal, deterministic fallback action** when the LLM path fails
+  — never raise through the game loop.
+
+<Info>
+  Source: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/BEDROCK.md`.
+</Info>

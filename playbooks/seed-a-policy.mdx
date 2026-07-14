@@ -1,0 +1,66 @@
+---
+title: "Seed a policy"
+description: "Produce the smallest working default policy for a new game — one that runs end-to-end and is shaped for later optimization."
+---
+
+Every game starts from a **default policy**. Before any optimization loop can
+climb a leaderboard, that default must (a) exist, (b) run end-to-end without
+crashing or timing out, and (c) be structured so you can make one scoped change
+at a time. The goal is **the smallest policy that already beats the bundled
+reference and is shaped for upgrades** — not the cleverest policy.
+
+```text
+read mechanics → pick architecture → structure for upgrades → package
+→ verify locally (smoke) → upload (verify run attr) → hand to optimization loop
+```
+
+<Steps>
+  <Step title="Read the game mechanics">
+    Answer the mechanics questions in
+    [Choose a game](/build-a-player/choose-a-game#answer-these-before-writing-code):
+    observability, determinism, latency budget, players/asymmetry, score shape,
+    protocol. Write durable findings into the game's own notes.
+  </Step>
+  <Step title="Pick the architecture">
+    Map mechanics to scripted / LLM / hybrid using the
+    [decision table](/build-a-player/architecture#decision-table). When unsure,
+    seed **scripted** and let evidence justify cognition later.
+  </Step>
+  <Step title="Structure for long-horizon upgrades">
+    Separate the brain from the transport, type the observation, emit a
+    per-episode artifact, make every decision attributable, and keep one knob per
+    concept. If the game is deterministic, build a local simulator.
+  </Step>
+  <Step title="Package as a Coworld player image">
+    `linux/amd64`, importable package, correct `--run` argv. See
+    [Packaging](/build-a-player/packaging). Enforce the robustness contract: a
+    legal default action on any bad input, and an immediate scripted fallback for
+    any LLM failure.
+  </Step>
+  <Step title="Verify locally before spending anything">
+    Run `coworld run-episode ... -n 1 -o runs/smoke` and confirm scores are real
+    (not a timeout), logs are clean (no tracebacks), and artifacts were written.
+    See [Verify locally](/build-a-player/local-verification).
+  </Step>
+  <Step title="Upload, verify, hand off">
+    Verify the active player, read the live standings, upload, and **confirm the
+    `run` attribute is non-null** on the new version. The seeded policy is now
+    the base ref for the [optimization loop](/playbooks/optimize-a-policy).
+  </Step>
+</Steps>
+
+## Anti-patterns
+
+- Shipping a default that crashes or times out — a working simple policy always
+  beats a clever broken one.
+- Uploading without the correct `--run` argv, or skipping the `run`-attribute
+  check afterward.
+- Reaching for an LLM when the game is fully observable, deterministic, and
+  latency-tight.
+- An LLM/hybrid policy with no deterministic fallback path.
+- A monolithic policy where brain and transport are tangled.
+
+<Info>
+  Source: adapted from `Metta-AI/optimizer-agent`
+  `skills/seed-a-new-policy/SKILL.md`.
+</Info>

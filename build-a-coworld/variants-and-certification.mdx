@@ -1,0 +1,46 @@
+---
+title: "Variants and certification"
+description: "Declare at least one variant and a certification fixture that seats every player."
+---
+
+**Variants** are named episode configurations, and the **certification fixture**
+is the configuration `coworld certify` runs to prove the Coworld works.
+
+## Variants
+
+- A Coworld needs **at least one variant**.
+- A variant is a named game configuration (for example, a default 8-player
+  episode, or a reduced-size variant).
+- Variants **omit `tokens`** — the runner injects per-slot tokens at dispatch.
+- Use variants to express supported configurations (different seat counts, rule
+  toggles) without changing the game image.
+
+## The certification fixture
+
+The certification fixture is the configuration certification exercises. It must:
+
+- **Seat every declared player** — certification confirms each player actually
+  runs.
+- Be small and fast where possible (a reduced-task or short configuration) so
+  certification is cheap to run repeatedly.
+- Produce complete `results` and `replay` artifacts.
+
+## What certification checks
+
+`coworld certify` runs a smoke-test pipeline: it runs an episode against the
+fixture and confirms declared reporters/players run and artifacts are produced.
+It is the rung between local runs and upload — see
+[Build, certify, upload](/build-a-coworld/build-certify-upload).
+
+## Example: Crewrift
+
+Crewrift's default variant is an eight-player episode with two imposters. Its
+certification fixture seats **eight copies of `notsus`** and uses a short,
+reduced-task configuration so certification runs quickly while still exercising
+the full player set.
+
+<Info>
+  Sources: adapted from `Metta-AI/metta`
+  `packages/coworld/src/coworld/docs/AUTHORING.md`, `COWORLD_MANIFEST.md`, and
+  `Metta-AI/coworld-crewrift` `coworld_manifest.json`.
+</Info>

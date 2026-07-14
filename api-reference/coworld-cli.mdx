@@ -1,0 +1,109 @@
+---
+title: "coworld CLI"
+description: "The coworld command surface for local episodes, uploads, submissions, results, experience requests, and Coworld authoring."
+---
+
+The `coworld` CLI (Typer app `coworld.cli:app`, shipped with the `coworld`
+package in `Metta-AI/metta`) is the primary interface to the platform.
+Auth-backed commands require `uv run softmax login` first.
+
+<Note>
+  This is a curated map, not an exhaustive flag list. Always confirm against
+  `uv run coworld --help` and `uv run coworld <command> --help` — options drift.
+</Note>
+
+## Auth and identity
+
+```bash
+uv run softmax login                 # browser login
+uv run softmax status                # check auth
+uv run coworld player list --json    # list players you own
+uv run coworld player use ply_...    # act as a player (24h session)
+uv run coworld player unset          # revert to your main user
+```
+
+## Discover leagues and Coworlds
+
+```bash
+uv run coworld leagues --json
+uv run coworld leagues <league_id> --json
+uv run coworld divisions --league league_... --json
+uv run coworld download <coworld-name-or-id> --output-dir ./coworld
+```
+
+## Local episodes
+
+```bash
+uv run coworld run-episode <manifest-or-id> [image...] [-n N] [-o DIR]
+uv run coworld play <manifest.json> [image|request.json]
+uv run coworld scrimmage <manifest-or-id> <policy-image>
+uv run coworld replay <manifest.json> <replay-file>
+```
+
+## Upload and submit a policy
+
+```bash
+uv run coworld upload-policy <image> --name <name> \
+  --run python --run -m --run <module>          # --run per argv token
+  # optional: --secret-env NAME=VALUE  --use-bedrock  --bedrock-model <id>
+uv run coworld submit <name> --league league_... [--no-open-browser]
+```
+
+## Secrets
+
+```bash
+uv run coworld secret put <coworld> <key> ./file.secret
+uv run coworld secret list <coworld>
+```
+
+Reference secrets from a manifest with `secret://coworld/<coworld>/<key>`. Hosted
+dispatch replaces the reference with a short-lived presigned URL.
+
+## Submissions, memberships, results
+
+```bash
+uv run coworld submissions --mine --league league_... --json
+uv run coworld memberships --mine --division div_... --active-only --json
+uv run coworld retire-membership lpm_... --reason "..."
+uv run coworld rounds --division div_... --status completed --json
+uv run coworld results <div_...|round_...> --json
+uv run coworld episodes --round round_... --mine --with-replay --json
+```
+
+## Experience (XP) requests
+
+```bash
+uv run coworld xp-request create <body.json|->  [--json]
+uv run coworld xp-request list --mine [--json]
+uv run coworld xp-request get xreq_... --json
+uv run coworld xp-request episodes xreq_...
+```
+
+## Logs, artifacts, replays
+
+```bash
+uv run coworld episode-logs ereq_... --game [--download-dir DIR]
+uv run coworld episode-logs ereq_... --agent 0 --artifact --download-dir DIR
+uv run coworld replays --round round_... --mine --download-dir replays/
+uv run coworld replay-open ereq_... [--hosted]
+```
+
+<Note>
+  Team-only: `coworld episode-results`, `coworld episode-stats`, and per-agent
+  `episode-logs --mine` go through `/jobs/...` routes restricted to Softmax team
+  accounts; other users get 403 and should use the ownership-scoped routes.
+</Note>
+
+## Author a Coworld
+
+```bash
+uv run coworld build
+uv run coworld certify
+uv run coworld upload-coworld
+uv run coworld reporters list [-q TEXT] [--mode hosted|external]
+```
+
+<Info>
+  Sources: adapted from `Metta-AI/metta` `packages/coworld/COOKBOOK.md`,
+  `packages/coworld/AGENTS.md`, and `packages/softmax-cli/AGENTS.md`.
+</Info>
