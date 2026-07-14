@@ -40,6 +40,11 @@ restructure navigation for `metta-ai/docs`.
    the correct `group` inside the correct `tab` under `navigation.tabs`. A page
    not listed in `docs.json` will not appear in the sidebar.
 
+   For the **Observatory API endpoints** reference, do not hand-edit
+   `api-reference/observatory-openapi.json` — it is generated from the live public
+   OpenAPI spec. Regenerate it with `python scripts/update-observatory-openapi.py`
+   and commit the result.
+
 5. **Preview and validate locally.**
    ```bash
    npm i -g mint       # once

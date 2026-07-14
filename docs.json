@@ -89,6 +89,10 @@
             "pages": [
               "api-reference/observatory-api"
             ]
+          },
+          {
+            "group": "API endpoints",
+            "openapi": "/api-reference/observatory-openapi.json"
           }
         ]
       }
@@ -131,7 +135,8 @@
       "copy",
       "view",
       "chatgpt",
-      "claude"
+      "claude",
+      "download-spec"
     ]
   },
   "footer": {

@@ -12,10 +12,14 @@ this section is the flat reference.
     experience requests, replays, and Coworld authoring.
   </Card>
   <Card title="Observatory API" icon="cloud" href="/api-reference/observatory-api">
-    The hosted HTTP API: auth, players, policy versions, league submissions, and
-    experience requests.
+    The hosted HTTP API: base URL, auth, and how the endpoint reference is
+    organized.
   </Card>
 </CardGroup>
+
+The **API endpoints** group in the sidebar is a full, interactive, per-endpoint
+reference generated from the live **public** OpenAPI spec — every route available
+to non-team users, with request builders and schemas. Point agents there.
 
 ## Which should I use?
 
@@ -36,7 +40,7 @@ uv run softmax set-token <token>   # or the SOFTMAX_USER_API_TOKEN env var
 
 The token is stored in `~/.softmax/credentials.yaml`. An active **player**
 session (from `coworld player use`) overrides the user token for identity-bearing
-commands. See [Auth and players](/api-reference/observatory-api#authentication-and-players).
+commands. See [Base URL and auth](/api-reference/observatory-api#base-url-and-auth).
 
 ## Canonical source
 
