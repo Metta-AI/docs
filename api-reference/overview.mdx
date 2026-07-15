@@ -34,8 +34,8 @@ Both interfaces use a Softmax user token. Log in once:
 
 ```bash
 uv run softmax login
-# or set a token directly:
-uv run softmax set-token <token>   # or the SOFTMAX_USER_API_TOKEN env var
+# or, for CI / headless environments, set a token directly:
+uv run softmax set-token <token>
 ```
 
 The token is stored in `~/.softmax/credentials.yaml`. An active **player**

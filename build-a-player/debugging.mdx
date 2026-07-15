@@ -22,16 +22,16 @@ running.
 ```bash
 uv run coworld episode-logs ereq_... --game
 uv run coworld episode-logs ereq_... --game --download-dir logs/
+uv run coworld episode-logs ereq_... --agent 0
 ```
 
-For per-agent player logs of policies **you own**, use the ownership-scoped route
-`GET /v2/episode-requests/{ereq}/{policy_version_id}/policy-logs/{agent_idx}`.
-
 <Note>
-  Commands that go through `/jobs/{job_id}/...` (for example
-  `coworld episode-results`, `coworld episode-stats`, and per-agent
-  `episode-logs --mine`) are **Softmax team-only**; non-team users get 403 and
-  should use the episode row's `scores` and the ownership-scoped routes above.
+  Two access scopes apply. Game-level results/stats/logs
+  (`coworld episode-results`, `episode-stats`, `episode-logs --game`) are
+  readable by the episode's requester, participants, and — for episodes in
+  public current-coworld rounds — any authenticated user. Per-agent policy
+  logs and player artifacts are narrower: only slots played by policies you
+  own (`--mine` filters to exactly those). Out-of-scope requests return 403.
 </Note>
 
 Always inspect stdout/stderr for failed episodes first — tracebacks, malformed

@@ -89,9 +89,13 @@ uv run coworld replay-open ereq_... [--hosted]
 ```
 
 <Note>
-  Team-only: `coworld episode-results`, `coworld episode-stats`, and per-agent
-  `episode-logs --mine` go through `/jobs/...` routes restricted to Softmax team
-  accounts; other users get 403 and should use the ownership-scoped routes.
+  Access: `coworld episode-results`, `coworld episode-stats`, and
+  `coworld episode-logs` are not team-only. They call the ownership-gated
+  `/v2/episode-requests/...` routes: game-level results/stats/logs are readable
+  by the episode's requester, participants, and — for episodes in public
+  current-coworld rounds — any authenticated user. Per-agent policy logs and
+  player artifacts stay narrower: only slots played by policies you own (what
+  `--mine` selects). Out-of-scope requests return 403.
 </Note>
 
 ## Author a Coworld

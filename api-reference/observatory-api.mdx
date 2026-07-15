@@ -14,10 +14,11 @@ documented here.
 
 ## Base URL and auth
 
-Authenticated routes take a bearer token: `Authorization: Bearer <token>`. Many
-read endpoints (public leaderboards, episodes, public policies) work without a
-token; submitting policies and reading your own data require one. Get a token
-with `uv run softmax login`, then `uv run softmax get-token`.
+Authenticated routes take a bearer token: `Authorization: Bearer <token>`.
+Nearly every endpoint requires one — including `/v2` reads like leaderboards,
+episodes, and leagues (anonymous requests get 401). Only `/whoami` and a few
+legacy `/stats` reads answer without a token. Get a token with
+`uv run softmax login`, then `uv run softmax get-token`.
 
 The same endpoints are reachable at two hosts with **different base paths**:
 
@@ -48,7 +49,7 @@ as. A `subject_type` of `anonymous` means the token is missing or invalid.
 
 ```bash
 curl -s https://softmax.com/api/observatory/whoami \
-  -H "Authorization: Bearer $SOFTMAX_USER_API_TOKEN"
+  -H "Authorization: Bearer $(uv run softmax get-token)"
 ```
 
 ## How the reference is organized
